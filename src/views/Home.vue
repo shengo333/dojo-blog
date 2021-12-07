@@ -1,77 +1,43 @@
 <template>
   <div class="home">
-    <h1>this is home page</h1>
-    <input type="text" v-model="search">
-    <p>search term - {{ search }}</p>
-    <div v-for="name in matchingNames" :key="name">
-      <p>{{name}}</p>
+    <h1>Home</h1>
+    <div v-if="error">{{error}}</div>
+    <div v-if="posts.length">
+          <PostList :posts="posts" />
     </div>
-    <button @click="handleClick">stop watching</button>
-
-    <!-- <h2>Refs</h2>
-    <p>{{ ninjaOne.name }} - {{ ninjaOne.age}}</p>
-    <button @click="updateNinjaOne"> Update Ninja One</button>
-    <h2>Reactive</h2>
-    <p>{{ninjaTwo.name}} - {{ninjaTwo.age}}</p>
-    <button @click="updateNinjaTwo"> Update Ninja two</button> -->
-
+    <div v-else>
+      <h1>Loading...</h1>
+    </div>
   </div>
 </template>
 
 <script>
-import { computed, ref, watch, watchEffect } from 'vue'
+
+import PostList from '../components/PostList.vue'
+import { ref } from 'vue'
 
 export default {
   name: 'Home',
+  components: {PostList},
   setup(){
-
-    const search = ref ('')
-    const names = ref(['mario', 'yoshi', 'luigi', 'toad', 'bowser', 'koopa', 'peach'])
-
-    const stopWatch = watch(search, () => {
-      console.log('watch function fireeeee')
-    })
-
-    const stopEffect = watchEffect(() => {
-      console.log('watch effect fireee', search.value)
-    })
-    
-    const matchingNames = computed (() =>  {
-      return names.value.filter ((name) => name.includes(search.value))
-    }) 
-
-    const handleClick = () => {
-      stopWatch()
-      stopEffect()
+    const posts = ref ([])
+    const error = ref (null)
+    const load = async () => {
+      try {
+        let data = await fetch('http://localhost:3000/posts')
+        if (!data.ok){
+          throw Error('no data available')
+        }
+        posts.value = await data.json()
+      }
+      catch (err) {
+        error.value = err.message
+        console.log(error.value)
+      }
     }
-
-    return { names, search, matchingNames, handleClick }
-
-    //const p = ref(null)
-
-    // const ninjaOne = ref({ name: 'mario', age: 30 })
-    // const ninjaTwo = reactive({ name: 'luigi', age: 35})
-
-    // const updateNinjaOne = () => {
-    //   ninjaOne.value.age = 40
-    // }
-    // const updateNinjaTwo = () => {
-    //   ninjaTwo.age = 45
-    // }
-    // const name = ref ('mario ')
-    // const age = ref (30)
-    
-    // const handleClick = () => {
-    //   name.value = 'luigi'
-    //   age.value = 35
-
-
-      // console.log(p, p.value)
-      // p.value.classList.add('test')
-      // p.value.textContent = 'hello jimi'
-
-    //return { ninjaOne, updateNinjaOne, ninjaTwo, updateNinjaTwo}
-  
+    load ()
+    return { posts, error }
   }
 }
+
 </script>
